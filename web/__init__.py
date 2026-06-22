@@ -1,0 +1,1 @@
+"""VulnHawk web dashboard package."""

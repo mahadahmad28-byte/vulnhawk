@@ -1,0 +1,21 @@
+# render.yaml — Render.com deployment configuration for VulnHawk web dashboard
+# Deploy: connect GitHub repo → Render detects this file automatically
+
+services:
+  - type: web
+    name: vulnhawk-dashboard
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: .
+    buildCommand: pip install -e ".[web]"
+    startCommand: uvicorn web.app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: REPORTS_DIR
+        value: /opt/render/project/src/reports
+    disk:
+      name: vulnhawk-reports
+      mountPath: /opt/render/project/src/reports
+      sizeGB: 1              # Free tier allows 1GB persistent disk
