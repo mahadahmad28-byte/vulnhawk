@@ -23,30 +23,31 @@ $ vulnhawk scan http://localhost:3000 --depth 2
   ╚████╔╝ ╚██████╔╝███████╗██║ ╚████║██║  ██║██║  ██║╚███╔███╔╝██║  ██╗
    ╚═══╝   ╚═════╝ ╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝  ╚═╝
 
-[1/8] Crawling target...       ████████████████ 47 URLs · 12 forms
-[2/8] XSS Scanner...           ████████████████ 3 found
-[3/8] SQLi Scanner...          ████████████████ 1 found
-[4/8] Headers Scanner...       ████████████████ 5 issues
-[5/8] CSRF Scanner...          ████████████████ 2 found
-[6/8] Directory Scanner...     ████████████████ 2 exposed
-[7/8] SSL/TLS Scanner...       ████████████████ 0 issues
-[8/8] Cookie Scanner...        ████████████████ 3 issues
+[1/9] Crawling target...       ████████████████ 47 URLs · 12 forms
+[2/9] XSS Scanner...           ████████████████ 3 found
+[3/9] SQLi Scanner...          ████████████████ 1 found
+[4/9] Headers Scanner...       ████████████████ 5 issues
+[5/9] CSRF Scanner...          ████████████████ 2 found
+[6/9] Directory Scanner...     ████████████████ 2 exposed
+[7/9] SSL/TLS Scanner...       ████████████████ 0 issues
+[8/9] Cookie Scanner...        ████████████████ 3 issues
+[9/9] Subdomain Scanner...     ████████████████ 2 found
 
-┌──────────┬───────┬────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────┐
 │ Severity │ Count │ Top Finding                            │
 ├──────────┼───────┼────────────────────────────────────────┤
 │ CRITICAL │   1   │ SQL Injection — /login (POST)          │
 │ HIGH     │   3   │ Reflected XSS — /search?q=             │
-│ MEDIUM   │   4   │ Missing CSP · CSRF on 2 forms          │
+│ MEDIUM   │   6   │ Missing CSP · CSRF · admin.target.com  │
 │ LOW      │   5   │ Cookie flags · HSTS missing            │
 │ INFO     │   4   │ Server version disclosed               │
-└──────────┴───────┴────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────┘
 📄 Report: ./reports/localhost_20260622_143012.html
 ```
 
 ---
 
-## ✨ Scanner Modules (8 Plugins)
+## ✨ Scanner Modules (9 Plugins)
 
 | Scanner | Detects | Severity | CVSS Range |
 |---------|---------|----------|------------|
@@ -67,7 +68,7 @@ $ vulnhawk scan http://localhost:3000 --depth 2
 ### Install
 
 ```bash
-git clone https://github.com/yourusername/vulnhawk.git
+git clone https://github.com/mahadahmad28-byte/vulnhawk.git
 cd vulnhawk
 
 python -m venv venv
@@ -123,29 +124,30 @@ Target URL
     ▼
 ┌──────────────┐
 │    Crawler   │  async httpx · discovers URLs, forms, params, headers
-│  (depth 1-5) │
+│  (depth 1-5) │  ⚡ Auth support: logs in before crawling
 └──────┬───────┘
        │ CrawlResult (URLs + forms + params + headers + cookies)
        ▼
-┌─────────────────────────────────────────────────┐
-│            Scanner Plugin Registry               │
-│                                                 │
-│  @register_scanner ← auto-discovers new files   │
-│                                                 │
-│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐  │
-│  │ XSS  │ │SQLi  │ │CSRF  │ │ Dir  │ │Head  │  │
-│  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘  │
-│  ┌──────┐ ┌──────┐ ┌──────┐                    │
-│  │ SSL  │ │Cook  │ │Redir │  ← all async        │
-│  └──────┘ └──────┘ └──────┘                    │
-└─────────────────┬───────────────────────────────┘
-                  │ list[Vulnerability]
+┌─────────────────────────────────────────────────────┐
+│            Scanner Plugin Registry (9 plugins)       │
+│                                                     │
+│  @register_scanner ← auto-discovers new files       │
+│                                                     │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐      │
+│  │ XSS  │ │SQLi  │ │CSRF  │ │ Dir  │ │Head  │      │
+│  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘      │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌────────────────┐     │
+│  │ SSL  │ │Cook  │ │Redir │ │   Subdomain    │     │
+│  └──────┘ └──────┘ └──────┘ └────────────────┘     │
+│               all run concurrently (asyncio)        │
+└─────────────────┬───────────────────────────────────┘
+                  │ list[Vulnerability] + CVSS 3.1 scores
                   ▼
-┌──────────────────────────────┐
-│       Report Generator       │
-│  HTML (dark-themed) + JSON   │
-│  + Rich CLI table output     │
-└──────────────────────────────┘
+┌──────────────────────────────────────────┐
+│           Report Generator               │
+│  HTML (dark-themed) + JSON + PDF         │
+│  + Rich CLI table with CVSS badges       │
+└──────────────────────────────────────────┘
 ```
 
 ### Adding a New Scanner
@@ -184,11 +186,11 @@ class MyScanner(BaseScanner):
 ```
 vulnhawk/
 ├── vulnhawk/
-│   ├── cli.py                # Typer CLI with Rich terminal output
+│   ├── cli.py                # Typer CLI — scan, --login-url, --format pdf
 │   ├── core/
-│   │   ├── crawler.py        # Async web crawler (httpx + BeautifulSoup)
+│   │   ├── crawler.py        # Async crawler + authenticated login support
 │   │   ├── scanner.py        # BaseScanner + @register_scanner plugin system
-│   │   └── reporter.py       # HTML + JSON report generator
+│   │   └── reporter.py       # HTML + JSON + PDF report generator
 │   ├── scanners/
 │   │   ├── xss.py            # Reflected XSS (params + forms)
 │   │   ├── sqli.py           # SQL Injection (error/boolean/time)
@@ -197,19 +199,21 @@ vulnhawk/
 │   │   ├── directories.py    # Sensitive path enumeration (40+ paths)
 │   │   ├── cookies.py        # Cookie flag checker
 │   │   ├── open_redirect.py  # URL redirect validator
-│   │   └── ssl_tls.py        # SSL/TLS cert + protocol checker
+│   │   ├── ssl_tls.py        # SSL/TLS cert + protocol checker
+│   │   └── subdomain.py      # Subdomain enumeration (DNS + HTTP probe)
 │   └── utils/
 │       ├── http_client.py    # Shared async httpx client factory
 │       ├── helpers.py        # URL utilities (inject_param, etc.)
 │       └── rate_limiter.py   # Token-bucket rate limiter (10 req/s)
 ├── web/
-│   ├── app.py                # FastAPI web dashboard
+│   ├── app.py                # FastAPI web dashboard (auth scan + PDF endpoint)
 │   └── templates/
 │       └── dashboard.html    # Dark-themed browser UI
 ├── tests/
 │   ├── conftest.py           # Pytest fixtures (mock crawl results)
 │   └── test_scanners.py      # Scanner unit tests
 ├── .github/workflows/ci.yml  # GitHub Actions (matrix: 3.11+3.12)
+├── render.yaml               # Render.com deploy config
 ├── pyproject.toml
 └── Dockerfile
 ```
@@ -245,4 +249,4 @@ vulnhawk/
 
 ---
 
-*Built as a portfolio project demonstrating async Python, cybersecurity concepts, and plugin-based software architecture.*
+*Built as a portfolio project by Muhammad Mahad Ahmad — demonstrates async Python, cybersecurity concepts, and plugin-based software architecture. [GitHub](https://github.com/mahadahmad28-byte)*
